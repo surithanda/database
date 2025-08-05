@@ -1,0 +1,6 @@
+DELIMITER //
+CREATE PROCEDURE lkp_get_Country_List()
+BEGIN
+	SELECT * FROM Country;
+END //
+DELIMITER ;

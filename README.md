@@ -1,2 +1,2 @@
-# database
-Database schme
+# MySQLDatabase
+This holds complete database
