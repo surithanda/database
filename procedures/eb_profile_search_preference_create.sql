@@ -3,10 +3,13 @@ CREATE PROCEDURE `eb_profile_search_preference_create`(
     IN p_profile_id INT,
     IN p_min_age INT,
     IN p_max_age INT,
-    IN p_gender VARCHAR(45),
-    IN p_location_preference VARCHAR(255),
-    IN p_distance_preference INT,
-    IN p_created_user VARCHAR(45)
+    IN p_gender INT,
+    IN p_religion INT,
+    IN p_max_education INT,
+    IN p_occupation INT,
+    IN p_country VARCHAR(45),
+    IN p_casete_id INT,
+    IN p_marital_status INT
 )
 BEGIN
     -- Declare variables for error handling
@@ -96,9 +99,9 @@ BEGIN
     END IF;
     
     -- Validate max_age
-    IF p_max_age IS NOT NULL AND (p_max_age < 18 OR p_max_age > 100) THEN
+    IF p_max_age IS NOT NULL AND (p_max_age < 20 OR p_max_age > 70) THEN
         SET error_code = '57004';
-        SET error_message = 'Maximum age must be between 18 and 100.';
+        SET error_message = 'Maximum age must be between 20 and 70.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
@@ -111,18 +114,58 @@ BEGIN
         SET MESSAGE_TEXT = error_message;
     END IF;
     
-    -- Validate gender
-    IF p_gender IS NOT NULL AND p_gender NOT IN ('Male', 'Female', 'Any') THEN
+    -- Validate gender from lookup table
+    IF p_gender IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'gender' AND lookup_id = p_gender AND isactive = 1) THEN
         SET error_code = '57006';
-        SET error_message = 'Gender preference must be Male, Female, or Any.';
+        SET error_message = 'Invalid gender preference code.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
     
-    -- Validate distance_preference
-    IF p_distance_preference IS NOT NULL AND p_distance_preference < 0 THEN
+    -- Validate religion from lookup table
+    IF p_religion IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'religion' AND lookup_id = p_religion AND isactive = 1) THEN
         SET error_code = '57007';
-        SET error_message = 'Distance preference must be a non-negative value.';
+        SET error_message = 'Invalid religion code.';
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = error_message;
+    END IF;
+    
+    -- Validate education from lookup table
+    IF p_max_education IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'education_level' AND lookup_id = p_max_education AND isactive = 1) THEN
+        SET error_code = '57008';
+        SET error_message = 'Invalid education level code.';
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = error_message;
+    END IF;
+    
+    -- Validate occupation from lookup table
+    IF p_occupation IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'profession' AND lookup_id = p_occupation AND isactive = 1) THEN
+        SET error_code = '57009';
+        SET error_message = 'Invalid occupation code.';
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = error_message;
+    END IF;
+    
+    -- Validate caste from lookup table
+    IF p_casete_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'caste' AND lookup_id = p_casete_id AND isactive = 1) THEN
+        SET error_code = '57010';
+        SET error_message = 'Invalid caste code.';
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = error_message;
+    END IF;
+    
+    -- Validate marital status from lookup table
+    IF p_marital_status IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'marital_status' AND lookup_id = p_marital_status AND isactive = 1) THEN
+        SET error_code = '57011';
+        SET error_message = 'Invalid marital status code.';
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = error_message;
+    END IF;
+    
+    -- Validate country from countries table
+    IF p_country IS NOT NULL AND NOT EXISTS (SELECT 1 FROM countries WHERE country_name = p_country) THEN
+        SET error_code = '57012';
+        SET error_message = 'Invalid country name.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
@@ -132,9 +175,8 @@ BEGIN
         SELECT 1 
         FROM profile_search_preference 
         WHERE profile_id = p_profile_id
-        AND (isverified != -1 OR isverified IS NULL)
     ) THEN
-        SET error_code = '57008';
+        SET error_code = '57013';
         SET error_message = 'This profile already has search preferences. Use the update procedure instead.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
@@ -146,25 +188,23 @@ BEGIN
         min_age,
         max_age,
         gender,
-        location_preference,
-        distance_preference,
-        date_created,
-        user_created,
-        date_modified,
-        user_modified,
-        isverified
+        religion,
+        max_education,
+        occupation,
+        country,
+        casete_id,
+        marital_status
     ) VALUES (
         p_profile_id,
         p_min_age,
         p_max_age,
         p_gender,
-        p_location_preference,
-        p_distance_preference,
-        NOW(),
-        p_created_user,
-        NOW(),
-        p_created_user,
-        0 -- Not verified by default
+        p_religion,
+        p_max_education,
+        p_occupation,
+        p_country,
+        p_casete_id,
+        p_marital_status
     );
     
     -- Get the new preference ID
@@ -183,7 +223,17 @@ BEGIN
         CONCAT('Search preferences created for profile ID: ', p_profile_id), 
         p_created_user, 
         'PROFILE_SEARCH_PREFERENCE_CREATE', 
-        CONCAT('Profile ID: ', p_profile_id, ', Preference ID: ', new_preference_id),
+        CONCAT('Profile ID: ', p_profile_id, 
+               ', Preference ID: ', new_preference_id, 
+               ', Min Age: ', IFNULL(p_min_age, 'NULL'), 
+               ', Max Age: ', IFNULL(p_max_age, 'NULL'), 
+               ', Gender: ', IFNULL(p_gender, 'NULL'), 
+               ', Religion: ', IFNULL(p_religion, 'NULL'), 
+               ', Education: ', IFNULL(p_max_education, 'NULL'), 
+               ', Occupation: ', IFNULL(p_occupation, 'NULL'), 
+               ', Country: ', IFNULL(p_country, 'NULL'), 
+               ', Caste: ', IFNULL(p_casete_id, 'NULL'), 
+               ', Marital Status: ', IFNULL(p_marital_status, 'NULL')),
         start_time, end_time, execution_time
     );
     

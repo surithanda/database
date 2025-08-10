@@ -11,6 +11,15 @@ BEGIN
     DECLARE email_otp INT;
     DECLARE start_date DATETIME;
     DECLARE id_account INT;
+    
+    -- Variables for activity tracking
+    DECLARE log_start_time DATETIME;
+    DECLARE log_end_time DATETIME;
+    DECLARE error_code VARCHAR(100);
+    DECLARE error_message VARCHAR(255);
+    
+    -- Record start time for activity tracking
+    SET log_start_time = NOW();
 
     -- Check if the username and password match 
     IF EXISTS (
@@ -66,6 +75,19 @@ BEGIN
             start_date,
             DATE_ADD(start_date, INTERVAL 2 MINUTE));
 
+        -- Log successful login
+        SET log_end_time = NOW();
+        
+        CALL common_log_activity(
+            'LOGIN', 
+            CONCAT('Successful login: ', email), 
+            email, 
+            'LOGIN_VALIDATE', 
+            CONCAT('Account ID: ', id_account, ', OTP generated: ', email_otp),
+            log_start_time,
+            log_end_time
+        );
+        
         -- Return the OTP and Account ID
         SELECT 
         'success' as status,
@@ -95,13 +117,25 @@ BEGIN
             usragent,
             location);
 
+        -- Log failed login attempt
+        SET error_code = '45100_INVLID_EMAIL_PASSWORD';
+        SET error_message = 'Email or Password is NOT Correct';
+        
+        CALL common_log_error(
+            error_code,
+            error_message,
+            email,
+            'LOGIN_VALIDATE',
+            log_start_time
+        );
+        
         -- Return -1 for OTP and NULL for Account ID if login fails
         SELECT
         'Fail' AS status,
         null AS otp, 
         NULL AS account_id,
-        '45100_INVLID_EMAIL_PASSWORD' AS error_code,
-        'Email or Password is NOT Correct' AS error_message;
+        error_code AS error_code,
+        error_message AS error_message;
     END IF;
 END //
 

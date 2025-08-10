@@ -6,7 +6,8 @@ This document provides a comprehensive list of all error codes used in the store
 
 All custom error codes follow the format:
 - SQLSTATE '45000' (Custom error)
-- Numeric error code in the range 50000-69999, grouped by table
+- Numeric error codes in the range 50000-69999 are grouped by table/module
+- Some modules use a different format with a prefix (e.g., 45001_MISSING_EMAIL)
 
 ## Error Codes by Table
 
@@ -43,7 +44,17 @@ All custom error codes follow the format:
 - `52005`: Contact value is required.
 - `52006`: Contact ID not found.
 - `52007`: Invalid contact ID. It must be a positive integer.
-- `52008`: Contact with this value already exists for this profile.
+
+### Account Login (45000-45999)
+- `45001_MISSING_EMAIL`: Email is required.
+- `45002_MISSING_PASSWORD`: Password is required.
+- `45003_MISSING_FIRST_NAME`: First name is required.
+- `45004_MISSING_LAST_NAME`: Last name is required.
+- `45005_DUPLICATE_EMAIL`: Email already exists.
+- `45006_DUPLICATE_PHONE`: Primary phone number already exists.
+- `45007_INVALID_BIRTH_DATE`: Birth date cannot be in the future.
+- `45008_UNDERAGE`: User must be at least 20 years old.
+- `45015_EMAIL_DOES_NOT_EXIST`: Email doesn't exist.
 
 ### Profile Education (53000-53999)
 - `53001`: Invalid profile_id. It must be a positive integer.
@@ -56,6 +67,58 @@ All custom error codes follow the format:
 - `53008`: End date cannot be earlier than start date.
 - `53009`: Education ID not found.
 - `53010`: Invalid education ID. It must be a positive integer.
+
+### Profile Search Preference (57000-57999)
+- `57001`: Invalid profile_id. It must be a positive integer.
+- `57002`: Profile does not exist.
+- `57003`: Min age is required.
+- `57004`: Max age is required.
+- `57005`: Min age cannot be greater than max age.
+- `57006`: Min height is required.
+- `57007`: Max height is required.
+- `57008`: Min height cannot be greater than max height.
+- `57009`: Search preference not found for the profile.
+- `57010`: Invalid search preference ID.
+- `57011`: Search preference does not exist.
+- `57012`: Min age is required and must be valid.
+- `57013`: Max age is required and must be valid.
+- `57014`: Min height is required and must be valid.
+- `57015`: Max height is required and must be valid.
+- `57016`: Min height cannot be greater than max height.
+- `57017`: Invalid search preference ID. It must be a positive integer.
+- `57018`: Search preference with this ID does not exist.
+
+### Profile Views (59000-59999)
+- `59001`: Invalid profile_id. It must be a positive integer.
+- `59002`: Profile does not exist.
+- `59003`: Viewed profile ID is required.
+- `59004`: Viewed profile does not exist.
+- `59005`: Cannot view your own profile.
+- `59006`: View record not found.
+- `59007`: Invalid profile_id for viewed by me query.
+- `59008`: Invalid profile_id for viewed me query.
+- `59009`: Viewed profile ID must be valid if provided.
+- `59010`: View status must be valid if provided.
+- `59011`: View date must be valid if provided.
+- `59012`: View record with specified ID does not exist.
+- `59013`: Invalid view ID. It must be a positive integer.
+- `59014`: View record with this ID does not exist.
+
+### Registered Partner (48000-48999)
+- `48001`: Business name is required.
+- `48002`: Alias is required.
+- `48003`: Primary phone is required.
+- `48004`: Primary phone country code is required.
+- `48005`: Address line 1 is required.
+- `48006`: State is required and must be valid.
+- `48007`: Country is required and must be valid.
+- `48008`: ZIP code is required.
+- `48009`: Business registration number is required.
+- `48010`: Business ITIN is required.
+- `48011`: Business description is required.
+- `48012`: Primary contact first name is required.
+- `48013`: Primary contact last name is required.
+- `48014`: Business website is required.
 
 ### Profile Employment (54000-54999)
 - `54001`: Invalid profile_id. It must be a positive integer.

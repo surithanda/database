@@ -12,6 +12,9 @@ BEGIN
     DECLARE error_message VARCHAR(255) DEFAULT NULL;
     DECLARE account_exists INT DEFAULT 0;
     
+    -- Variables for activity tracking
+    DECLARE start_time DATETIME DEFAULT NOW();
+    DECLARE end_time DATETIME;
     
     -- Declare handler for SQL exceptions
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
@@ -33,12 +36,22 @@ BEGIN
         ROLLBACK;
         
 
+        -- Log error using common_log_error procedure
+        CALL common_log_error(
+            error_code,
+            error_message,
+            p_modified_user,
+            'ENABLE_DISABLE_ACCOUNT',
+            start_time
+        );
+        
         -- Return error information in result sets
         SELECT NULL AS account_id;
         SELECT error_code AS error_code, error_message AS error_message;
         -- Ensure client sees the error
 		RESIGNAL;
     END;
+    
     
      -- Check if account_id is provided
     IF p_account_id IS NULL THEN
@@ -101,6 +114,20 @@ BEGIN
 
      -- Commit the transaction
     COMMIT;
+    
+    -- Record end time for activity tracking
+    SET end_time = NOW();
+    
+    -- Log the successful account status change
+    CALL common_log_activity(
+        CASE WHEN p_is_active = 1 THEN 'ENABLE' ELSE 'DISABLE' END, 
+        CASE WHEN p_is_active = 1 THEN 'Account enabled' ELSE 'Account disabled' END, 
+        p_modified_user, 
+        'ENABLE_DISABLE_ACCOUNT', 
+        CONCAT('Account ID: ', p_account_id, CASE WHEN p_is_active = 0 AND p_reason IS NOT NULL THEN CONCAT(', Reason: ', p_reason) ELSE '' END),
+        start_time,
+        end_time
+    );
      
     -- Return success results
     SELECT 
