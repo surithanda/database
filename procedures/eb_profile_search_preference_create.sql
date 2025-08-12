@@ -91,9 +91,9 @@ BEGIN
     END IF;
     
     -- Validate min_age
-    IF p_min_age IS NOT NULL AND (p_min_age < 18 OR p_min_age > 100) THEN
+    IF p_min_age IS NOT NULL AND (p_min_age < 20 OR p_min_age > 70) THEN
         SET error_code = '57003';
-        SET error_message = 'Minimum age must be between 18 and 100.';
+        SET error_message = 'Minimum age must be between 20 and 70.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
