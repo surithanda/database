@@ -1,7 +1,8 @@
 DELIMITER //
 CREATE PROCEDURE `eb_profile_favorites_create`(
-    IN p_profile_id INT,
-    IN p_favorite_profile_id INT,
+    IN p_from_profile_id INT,
+    IN p_to_profile_id INT,
+    IN p_account_id INT,
     IN p_created_user VARCHAR(45)
 )
 BEGIN
@@ -67,40 +68,40 @@ BEGIN
     -- Start transaction
     START TRANSACTION;
     
-    -- Validation: Ensure profile_id is valid
-    IF p_profile_id IS NULL OR p_profile_id <= 0 THEN
+    -- Validation: Ensure from_profile_id is valid
+    IF p_from_profile_id IS NULL OR p_from_profile_id <= 0 THEN
         SET error_code = '58001';
-        SET error_message = 'Invalid profile_id. It must be a positive integer.';
+        SET error_message = 'Invalid from_profile_id. It must be a positive integer.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
     
-    -- Validate if profile exists
-    IF NOT EXISTS (SELECT 1 FROM profile_personal WHERE profile_id = p_profile_id) THEN
+    -- Validate if from profile exists
+    IF NOT EXISTS (SELECT 1 FROM profile_personal WHERE profile_id = p_from_profile_id) THEN
         SET error_code = '58002';
-        SET error_message = 'Profile does not exist.';
+        SET error_message = 'From profile does not exist.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
     
-    -- Validate favorite_profile_id
-    IF p_favorite_profile_id IS NULL OR p_favorite_profile_id <= 0 THEN
+    -- Validate to_profile_id
+    IF p_to_profile_id IS NULL OR p_to_profile_id <= 0 THEN
         SET error_code = '58003';
-        SET error_message = 'Favorite profile ID is required and must be valid.';
+        SET error_message = 'To profile ID is required and must be valid.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
     
-    -- Validate if favorite profile exists
-    IF NOT EXISTS (SELECT 1 FROM profile_personal WHERE profile_id = p_favorite_profile_id) THEN
+    -- Validate if to profile exists
+    IF NOT EXISTS (SELECT 1 FROM profile_personal WHERE profile_id = p_to_profile_id) THEN
         SET error_code = '58004';
-        SET error_message = 'Favorite profile does not exist.';
+        SET error_message = 'To profile does not exist.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
     
     -- Check if profile is trying to favorite itself
-    IF p_profile_id = p_favorite_profile_id THEN
+    IF p_from_profile_id = p_to_profile_id THEN
         SET error_code = '58005';
         SET error_message = 'A profile cannot favorite itself.';
         SIGNAL SQLSTATE '45000' 
@@ -111,9 +112,9 @@ BEGIN
     IF EXISTS (
         SELECT 1 
         FROM profile_favorites 
-        WHERE profile_id = p_profile_id 
-        AND favorite_profile_id = p_favorite_profile_id
-        AND (isverified != -1 OR isverified IS NULL)
+        WHERE from_profile_id = p_from_profile_id 
+        AND to_profile_id = p_to_profile_id
+        AND is_active = b'1'
     ) THEN
         SET error_code = '58006';
         SET error_message = 'This profile has already favorited the specified profile.';
@@ -121,23 +122,29 @@ BEGIN
         SET MESSAGE_TEXT = error_message;
     END IF;
     
+    -- Validate account_id
+    IF p_account_id IS NULL OR p_account_id <= 0 THEN
+        SET error_code = '58007';
+        SET error_message = 'Account ID is required and must be valid.';
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = error_message;
+    END IF;
+    
     -- Insert the new favorite record
     INSERT INTO profile_favorites (
-        profile_id,
-        favorite_profile_id,
+        from_profile_id,
+        to_profile_id,
         date_created,
-        user_created,
-        date_modified,
-        user_modified,
-        isverified
+        is_active,
+        date_updated,
+        account_id
     ) VALUES (
-        p_profile_id,
-        p_favorite_profile_id,
+        p_from_profile_id,
+        p_to_profile_id,
         NOW(),
-        p_created_user,
+        b'1',
         NOW(),
-        p_created_user,
-        0 -- Not verified by default
+        p_account_id
     );
     
     -- Get the new favorite ID
@@ -153,10 +160,10 @@ BEGIN
         start_time, end_time, execution_time
     ) VALUES (
         'CREATE', 
-        CONCAT('Profile ', p_profile_id, ' favorited profile ', p_favorite_profile_id), 
+        CONCAT('Profile ', p_from_profile_id, ' favorited profile ', p_to_profile_id), 
         p_created_user, 
         'PROFILE_FAVORITES_CREATE', 
-        CONCAT('Profile ID: ', p_profile_id, ', Favorite Profile ID: ', p_favorite_profile_id),
+        CONCAT('From Profile ID: ', p_from_profile_id, ', To Profile ID: ', p_to_profile_id, ', Account ID: ', p_account_id),
         start_time, end_time, execution_time
     );
     

@@ -7,9 +7,10 @@ CREATE PROCEDURE `eb_profile_search_preference_create`(
     IN p_religion INT,
     IN p_max_education INT,
     IN p_occupation INT,
-    IN p_country VARCHAR(45),
+    IN p_country INT,
     IN p_casete_id INT,
-    IN p_marital_status INT
+    IN p_marital_status INT,
+    IN p_created_user VARCHAR(40)
 )
 BEGIN
     -- Declare variables for error handling
@@ -115,7 +116,7 @@ BEGIN
     END IF;
     
     -- Validate gender from lookup table
-    IF p_gender IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'gender' AND lookup_id = p_gender AND isactive = 1) THEN
+    IF p_gender IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'gender' AND id = p_gender AND isactive = 1) THEN
         SET error_code = '57006';
         SET error_message = 'Invalid gender preference code.';
         SIGNAL SQLSTATE '45000' 
@@ -123,7 +124,7 @@ BEGIN
     END IF;
     
     -- Validate religion from lookup table
-    IF p_religion IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'religion' AND lookup_id = p_religion AND isactive = 1) THEN
+    IF p_religion IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'religion' AND id = p_religion AND isactive = 1) THEN
         SET error_code = '57007';
         SET error_message = 'Invalid religion code.';
         SIGNAL SQLSTATE '45000' 
@@ -131,7 +132,7 @@ BEGIN
     END IF;
     
     -- Validate education from lookup table
-    IF p_max_education IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'education_level' AND lookup_id = p_max_education AND isactive = 1) THEN
+    IF p_max_education IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'education_level' AND id = p_max_education AND isactive = 1) THEN
         SET error_code = '57008';
         SET error_message = 'Invalid education level code.';
         SIGNAL SQLSTATE '45000' 
@@ -139,7 +140,7 @@ BEGIN
     END IF;
     
     -- Validate occupation from lookup table
-    IF p_occupation IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'profession' AND lookup_id = p_occupation AND isactive = 1) THEN
+    IF p_occupation IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'profession' AND id = p_occupation AND isactive = 1) THEN
         SET error_code = '57009';
         SET error_message = 'Invalid occupation code.';
         SIGNAL SQLSTATE '45000' 
@@ -147,7 +148,7 @@ BEGIN
     END IF;
     
     -- Validate caste from lookup table
-    IF p_casete_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'caste' AND lookup_id = p_casete_id AND isactive = 1) THEN
+    IF p_casete_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'caste' AND id = p_casete_id AND isactive = 1) THEN
         SET error_code = '57010';
         SET error_message = 'Invalid caste code.';
         SIGNAL SQLSTATE '45000' 
@@ -155,7 +156,7 @@ BEGIN
     END IF;
     
     -- Validate marital status from lookup table
-    IF p_marital_status IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'marital_status' AND lookup_id = p_marital_status AND isactive = 1) THEN
+    IF p_marital_status IS NOT NULL AND NOT EXISTS (SELECT 1 FROM lookup_table WHERE category = 'marital_status' AND id = p_marital_status AND isactive = 1) THEN
         SET error_code = '57011';
         SET error_message = 'Invalid marital status code.';
         SIGNAL SQLSTATE '45000' 
@@ -163,7 +164,7 @@ BEGIN
     END IF;
     
     -- Validate country from countries table
-    IF p_country IS NOT NULL AND NOT EXISTS (SELECT 1 FROM countries WHERE country_name = p_country) THEN
+    IF p_country IS NOT NULL AND NOT EXISTS (SELECT 1 FROM country WHERE  country_id= p_country) THEN
         SET error_code = '57012';
         SET error_message = 'Invalid country name.';
         SIGNAL SQLSTATE '45000' 
