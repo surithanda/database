@@ -11,6 +11,25 @@ All custom error codes follow the format:
 
 ## Error Codes by Table
 
+### Profile Personal Create (46000-46999)
+- `46001_INVALID_ACCOUNTID`: Invalid accountid. It must be a positive integer.
+- `46002_MISSING_FIRST_NAME`: First name cannot be empty.
+- `46003_MISSING_LAST_NAME`: Last name cannot be empty.
+- `46004_INVALID_GENDER`: Invalid gender. Please provide a valid gender (1 for Male, 2 for Female).
+- `46005_MISSING_BIRTH_DATE`: Date of birth is required.
+- `46006_DUPLICATE_PROFILE`: Profile with the same first name, last name, and date of birth already exists.
+- `46007_DUPLICATE_EMAIL`: Profile with the same email already exists.
+- `46008_DUPLICATE_PHONE`: Profile with the same mobile phone already exists.
+- `46009_INVALID_AGE`: Age should be between 21 and 85.
+- `46010_INVALID_ACCOUNT`: Invalid Account ID. The account does not exist.
+- `46011_INVALID_MOBILE`: Invalid mobile phone number. It should contain at least 10 digits.
+- `46012_INVALID_HOME_PHONE`: Invalid home phone number. It should contain at least 10 digits.
+- `46013_INVALID_EMERGENCY_PHONE`: Invalid emergency phone number. It should contain at least 10 digits.
+- `46014_INVALID_EMAIL`: Invalid email format.
+- `46015_INVALID_HEIGHT`: Invalid height. Height must be greater than 0.
+- `46016_INVALID_WEIGHT`: Invalid weight. Weight must be greater than 0.
+- `46017_ACCOUNT_IS_NOT_ACTIVE`: This account is not active. Please contact administrator to enable your account.
+
 ### Profile Personal (50000-50999)
 - `50001`: Invalid profile_id. It must be a positive integer.
 - `50002`: Profile does not exist.

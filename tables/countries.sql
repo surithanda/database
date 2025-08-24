@@ -1,5 +1,5 @@
-DROP TABLE countries ;
-CREATE TABLE countries (
+DROP TABLE country ;
+CREATE TABLE country (
     country_id SERIAL PRIMARY KEY,
     country_name VARCHAR(100) NOT NULL,
     official_name VARCHAR(150),
@@ -17,6 +17,6 @@ CREATE TABLE countries (
     is_active BOOLEAN DEFAULT TRUE
 );
 
-CREATE INDEX idx_countries_name ON countries(country_name);
-CREATE INDEX idx_countries_code2 ON countries(country_code_2);
-CREATE INDEX idx_countries_code3 ON countries(country_code_3);
+CREATE INDEX idx_country_name ON country(country_name);
+CREATE INDEX idx_country_code2 ON country(country_code_2);
+CREATE INDEX idx_country_code3 ON country(country_code_3);
