@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS stripe_customers (
+    id VARCHAR(255) PRIMARY KEY COMMENT 'Stripe customer ID (e.g., cus_XXX)',
+    account_id INT COMMENT 'Reference to internal account ID',
+    email VARCHAR(255) COMMENT 'Customer email address',
+    name VARCHAR(255) COMMENT 'Customer name',
+    description TEXT COMMENT 'Customer description',
+    default_payment_method_id VARCHAR(255) COMMENT 'Default payment method ID',
+    invoice_prefix VARCHAR(50) COMMENT 'Prefix for invoice numbers',
+    phone VARCHAR(50) COMMENT 'Customer phone number',
+    address_line1 VARCHAR(255) COMMENT 'Address line 1',
+    address_line2 VARCHAR(255) COMMENT 'Address line 2',
+    address_city VARCHAR(255) COMMENT 'City',
+    address_state VARCHAR(255) COMMENT 'State/Province',
+    address_postal_code VARCHAR(20) COMMENT 'Postal/ZIP code',
+    address_country VARCHAR(2) COMMENT 'Country code (ISO 3166-1 alpha-2)',
+    metadata JSON COMMENT 'Additional customer metadata',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation timestamp',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Record update timestamp',
+    deleted_at TIMESTAMP NULL COMMENT 'Soft delete timestamp',
+    INDEX idx_account_id (account_id),
+    INDEX idx_email (email),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stripe customers data';

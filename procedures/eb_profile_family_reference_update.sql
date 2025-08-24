@@ -3,14 +3,37 @@ CREATE PROCEDURE `eb_profile_family_reference_update`(
     IN p_profile_family_reference_id INT,
     IN p_first_name VARCHAR(45),
     IN p_last_name VARCHAR(45),
-    IN p_relationship_id INT,
-    IN p_phone VARCHAR(15),
+    IN p_middle_name VARCHAR(45),
+    IN p_alias VARCHAR(45),
+    IN p_gender INT,
+    IN p_date_of_birth DATE,
+    IN p_religion INT,
+    IN p_nationality INT,
+    IN p_caste INT,
+    IN p_marital_status INT,
+    IN p_highest_education INT,
+    IN p_disability INT,
+    IN p_reference_type INT,
+    IN p_primary_phone VARCHAR(45),
+    IN p_secondary_phone VARCHAR(45),
+    IN p_can_communicate TINYINT,
     IN p_email VARCHAR(45),
-    IN p_address_line1 VARCHAR(100),
+    IN p_linkedin VARCHAR(45),
+    IN p_instagram VARCHAR(45),
+    IN p_facebook VARCHAR(45),
+    IN p_whatsapp VARCHAR(45),
+    IN p_address_line1 VARCHAR(50),
     IN p_city VARCHAR(45),
-    IN p_state_id INT,
-    IN p_country_id INT,
+    IN p_state INT,
+    IN p_country INT,
     IN p_zip VARCHAR(8),
+    IN p_employment_status INT,
+    IN p_emp_company_name VARCHAR(45),
+    IN p_emp_city VARCHAR(45),
+    IN p_emp_state VARCHAR(45),
+    IN p_emp_country VARCHAR(45),
+    IN p_emp_zip VARCHAR(8),
+    IN p_isverified INT,
     IN p_modified_user VARCHAR(45)
 )
 BEGIN
@@ -110,18 +133,18 @@ BEGIN
         SET MESSAGE_TEXT = error_message;
     END IF;
     
-    -- Validate relationship_id if provided
-    IF p_relationship_id IS NOT NULL AND p_relationship_id <= 0 THEN
+    -- Validate reference_type if provided
+    IF p_reference_type IS NOT NULL AND p_reference_type <= 0 THEN
         SET error_code = '51013';
-        SET error_message = 'Relationship ID must be valid if provided.';
+        SET error_message = 'Reference type must be valid if provided.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
     
-    -- Validate phone if provided
-    IF p_phone IS NOT NULL AND TRIM(p_phone) = '' THEN
+    -- Validate primary_phone if provided
+    IF p_primary_phone IS NOT NULL AND TRIM(p_primary_phone) = '' THEN
         SET error_code = '51014';
-        SET error_message = 'Phone number cannot be empty if provided.';
+        SET error_message = 'Primary phone number cannot be empty if provided.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
@@ -139,14 +162,37 @@ BEGIN
     SET 
         first_name = IFNULL(p_first_name, first_name),
         last_name = IFNULL(p_last_name, last_name),
-        relationship_id = IFNULL(p_relationship_id, relationship_id),
-        phone = IFNULL(p_phone, phone),
+        middle_name = IFNULL(p_middle_name, middle_name),
+        alias = IFNULL(p_alias, alias),
+        gender = IFNULL(p_gender, gender),
+        date_of_birth = IFNULL(p_date_of_birth, date_of_birth),
+        religion = IFNULL(p_religion, religion),
+        nationality = IFNULL(p_nationality, nationality),
+        caste = IFNULL(p_caste, caste),
+        marital_status = IFNULL(p_marital_status, marital_status),
+        highest_education = IFNULL(p_highest_education, highest_education),
+        disability = IFNULL(p_disability, disability),
+        reference_type = IFNULL(p_reference_type, reference_type),
+        primary_phone = IFNULL(p_primary_phone, primary_phone),
+        secondary_phone = IFNULL(p_secondary_phone, secondary_phone),
+        can_communicate = IFNULL(p_can_communicate, can_communicate),
         email = IFNULL(p_email, email),
+        linkedin = IFNULL(p_linkedin, linkedin),
+        instagram = IFNULL(p_instagram, instagram),
+        facebook = IFNULL(p_facebook, facebook),
+        whatsapp = IFNULL(p_whatsapp, whatsapp),
         address_line1 = IFNULL(p_address_line1, address_line1),
         city = IFNULL(p_city, city),
-        state_id = IFNULL(p_state_id, state_id),
-        country_id = IFNULL(p_country_id, country_id),
+        state = IFNULL(p_state, state),
+        country = IFNULL(p_country, country),
         zip = IFNULL(p_zip, zip),
+        employment_status = IFNULL(p_employment_status, employment_status),
+        emp_company_name = IFNULL(p_emp_company_name, emp_company_name),
+        emp_city = IFNULL(p_emp_city, emp_city),
+        emp_state = IFNULL(p_emp_state, emp_state),
+        emp_country = IFNULL(p_emp_country, emp_country),
+        emp_zip = IFNULL(p_emp_zip, emp_zip),
+        isverified = IFNULL(p_isverified, isverified),
         date_modified = NOW(),
         user_modified = p_modified_user
     WHERE profile_family_reference_id = p_profile_family_reference_id;

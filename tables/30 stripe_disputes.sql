@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS stripe_disputes (
+    id VARCHAR(255) PRIMARY KEY COMMENT 'Stripe dispute ID (e.g., dp_XXX)',
+    charge_id VARCHAR(255) NOT NULL COMMENT 'Associated Stripe charge ID',
+    amount BIGINT NOT NULL COMMENT 'Amount disputed in smallest currency unit (e.g., cents)',
+    currency VARCHAR(3) NOT NULL COMMENT 'Three-letter ISO currency code',
+    status ENUM('warning_needs_response', 'warning_under_review', 'warning_closed', 'needs_response', 'under_review', 'won', 'lost') NOT NULL COMMENT 'Dispute status',
+    reason ENUM('bank_cannot_process', 'check_returned', 'credit_not_processed', 'customer_initiated', 'debit_not_authorized', 'duplicate', 'fraudulent', 'general', 'incorrect_account_details', 'insufficient_funds', 'product_not_received', 'product_unacceptable', 'subscription_canceled', 'unrecognized') NOT NULL COMMENT 'Reason for dispute',
+    evidence_due_by TIMESTAMP NULL COMMENT 'Evidence due date',
+    evidence_details JSON COMMENT 'Evidence details',
+    is_charge_refundable BOOLEAN DEFAULT FALSE COMMENT 'Whether the charge is refundable',
+    metadata JSON COMMENT 'Additional dispute metadata',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation timestamp',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Record update timestamp',
+    deleted_at TIMESTAMP NULL COMMENT 'Soft delete timestamp',
+    INDEX idx_charge_id (charge_id),
+    INDEX idx_status (status),
+    INDEX idx_reason (reason),
+    INDEX idx_created_at (created_at),
+    CONSTRAINT fk_stripe_disputes_charge FOREIGN KEY (charge_id) REFERENCES stripe_charges(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stripe disputes data';
