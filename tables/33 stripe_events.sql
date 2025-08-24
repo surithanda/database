@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS stripe_events (
+    id VARCHAR(255) PRIMARY KEY COMMENT 'Stripe event ID (e.g., evt_XXX)',
+    type VARCHAR(100) NOT NULL COMMENT 'Event type (e.g., customer.created, charge.succeeded)',
+    object_id VARCHAR(255) NOT NULL COMMENT 'ID of the object this event applies to',
+    object_type VARCHAR(50) NOT NULL COMMENT 'Type of object this event applies to',
+    api_version VARCHAR(20) COMMENT 'Stripe API version used',
+    request_id VARCHAR(255) COMMENT 'ID of the API request that triggered the event',
+    idempotency_key VARCHAR(255) COMMENT 'Idempotency key for the request',
+    livemode BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Whether this event was from live mode or test mode',
+    data JSON NOT NULL COMMENT 'Full event data payload',
+    pending_webhooks INT NOT NULL DEFAULT 0 COMMENT 'Number of webhooks pending for this event',
+    processed BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Whether this event has been processed by our system',
+    processing_errors TEXT COMMENT 'Any errors encountered during processing',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation timestamp',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Record update timestamp',
+    deleted_at TIMESTAMP NULL COMMENT 'Soft delete timestamp',
+    INDEX idx_type (type),
+    INDEX idx_object_id (object_id),
+    INDEX idx_object_type (object_type),
+    INDEX idx_processed (processed),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stripe events data for webhook processing';

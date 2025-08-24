@@ -1,9 +1,6 @@
 DELIMITER //
 CREATE PROCEDURE `eb_profile_search_preference_get`(
-    IN p_profile_id INT,
-    IN p_preference_id INT,
-    IN p_created_user VARCHAR(45)
-)
+    IN p_profile_id INT)
 BEGIN
     -- Declare variables for error handling
     DECLARE custom_error BOOLEAN DEFAULT FALSE;
@@ -25,7 +22,7 @@ BEGIN
             log_type, message, created_by, activity_type, activity_details,
             start_time, end_time, execution_time
         ) VALUES (
-            'ERROR', error_message, p_created_user, 'PROFILE_SEARCH_PREFERENCE_GET', 
+            'ERROR', error_message, p_profile_id, 'PROFILE_SEARCH_PREFERENCE_GET', 
             CONCAT('Error Code: ', error_code),
             start_time, NOW(), TIMESTAMPDIFF(MICROSECOND, start_time, NOW()) / 1000
         );
@@ -45,7 +42,7 @@ BEGIN
             log_type, message, created_by, activity_type, activity_details,
             start_time, end_time, execution_time
         ) VALUES (
-            'ERROR', error_message, p_created_user, 'PROFILE_SEARCH_PREFERENCE_GET', 
+            'ERROR', error_message, p_profile_id, 'PROFILE_SEARCH_PREFERENCE_GET', 
             CONCAT('Error Code: ', error_code),
             start_time, NOW(), TIMESTAMPDIFF(MICROSECOND, start_time, NOW()) / 1000
         );
@@ -61,15 +58,15 @@ BEGIN
     SET start_time = NOW();
     
     -- Validation: Ensure at least one of profile_id or preference_id is provided
-    IF p_profile_id IS NULL AND p_preference_id IS NULL THEN
+    IF p_profile_id IS NULL THEN
         SET error_code = '57009';
-        SET error_message = 'Either profile_id or preference_id must be provided.';
+        SET error_message = 'Either profile_id must be provided.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
     
     -- Query based on the provided parameters
-    IF p_preference_id IS NOT NULL THEN
+    IF p_profile_id IS NOT NULL THEN
         -- Get specific search preference by ID
         SELECT 
             psp.*,
@@ -78,8 +75,7 @@ BEGIN
             NULL AS error_code,
             NULL AS error_message
         FROM profile_search_preference psp
-        WHERE psp.preference_id = p_preference_id
-        AND (psp.isverified != -1 OR psp.isverified IS NULL); -- Exclude soft-deleted records
+        WHERE psp.profile_id = p_profile_id;
         
     ELSEIF p_profile_id IS NOT NULL THEN
         -- Get search preferences for a profile
@@ -90,8 +86,7 @@ BEGIN
             NULL AS error_code,
             NULL AS error_message
         FROM profile_search_preference psp
-        WHERE psp.profile_id = p_profile_id
-        AND (psp.isverified != -1 OR psp.isverified IS NULL); -- Exclude soft-deleted records
+        WHERE psp.profile_id = p_profile_id;
     END IF;
     
     -- Record end time and calculate execution time
@@ -105,14 +100,12 @@ BEGIN
     ) VALUES (
         'READ', 
         CASE 
-            WHEN p_preference_id IS NOT NULL THEN CONCAT('Search preference retrieved by ID: ', p_preference_id)
-            ELSE CONCAT('Search preferences retrieved for profile ID: ', p_profile_id)
+            WHEN p_profile_id IS NOT NULL THEN CONCAT('Search preferences retrieved for profile ID: ', p_profile_id)
         END, 
-        p_created_user, 
+        p_profile_id, 
         'PROFILE_SEARCH_PREFERENCE_GET', 
         CASE 
-            WHEN p_preference_id IS NOT NULL THEN CONCAT('Preference ID: ', p_preference_id)
-            ELSE CONCAT('Profile ID: ', p_profile_id)
+            WHEN p_profile_id IS NOT NULL THEN CONCAT('Profile ID: ', p_profile_id)
         END,
         start_time, end_time, execution_time
     );

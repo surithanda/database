@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS stripe_payouts (
+    id VARCHAR(255) PRIMARY KEY COMMENT 'Stripe payout ID (e.g., po_XXX)',
+    amount BIGINT NOT NULL COMMENT 'Amount in smallest currency unit (e.g., cents)',
+    currency VARCHAR(3) NOT NULL COMMENT 'Three-letter ISO currency code',
+    arrival_date TIMESTAMP NULL COMMENT 'Expected arrival date in bank account',
+    status ENUM('pending', 'in_transit', 'paid', 'failed', 'canceled') NOT NULL COMMENT 'Payout status',
+    method ENUM('standard', 'instant') NOT NULL DEFAULT 'standard' COMMENT 'Payout method',
+    type ENUM('bank_account', 'card') NOT NULL COMMENT 'Payout destination type',
+    bank_account_id VARCHAR(255) COMMENT 'Bank account ID if type is bank_account',
+    description TEXT COMMENT 'Description of the payout',
+    statement_descriptor VARCHAR(255) COMMENT 'Statement descriptor shown on bank account',
+    source_type ENUM('card', 'bank_account', 'fpx', 'alipay') COMMENT 'Source balance type',
+    failure_code VARCHAR(100) COMMENT 'Failure code if payout failed',
+    failure_message TEXT COMMENT 'Failure message if payout failed',
+    metadata JSON COMMENT 'Additional payout metadata',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation timestamp',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Record update timestamp',
+    deleted_at TIMESTAMP NULL COMMENT 'Soft delete timestamp',
+    INDEX idx_status (status),
+    INDEX idx_arrival_date (arrival_date),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stripe payouts data';

@@ -1,8 +1,7 @@
 DELIMITER //
 CREATE PROCEDURE `eb_profile_favorites_get`(
     IN p_profile_id INT,
-    IN p_id INT,
-    IN p_created_user VARCHAR(45)
+    IN p_account_id INT
 )
 BEGIN
     -- Declare variables for error handling
@@ -25,7 +24,7 @@ BEGIN
             log_type, message, created_by, activity_type, activity_details,
             start_time, end_time, execution_time
         ) VALUES (
-            'ERROR', error_message, p_created_user, 'PROFILE_FAVORITES_GET', 
+            'ERROR', error_message, p_account_id, 'PROFILE_FAVORITES_GET', 
             CONCAT('Error Code: ', error_code),
             start_time, NOW(), TIMESTAMPDIFF(MICROSECOND, start_time, NOW()) / 1000
         );
@@ -45,7 +44,7 @@ BEGIN
             log_type, message, created_by, activity_type, activity_details,
             start_time, end_time, execution_time
         ) VALUES (
-            'ERROR', error_message, p_created_user, 'PROFILE_FAVORITES_GET', 
+            'ERROR', error_message, p_account_id, 'PROFILE_FAVORITES_GET', 
             CONCAT('Error Code: ', error_code),
             start_time, NOW(), TIMESTAMPDIFF(MICROSECOND, start_time, NOW()) / 1000
         );
@@ -61,7 +60,7 @@ BEGIN
     SET start_time = NOW();
     
     -- Validation: Ensure at least one of profile_id or id is provided
-    IF p_profile_id IS NULL AND p_id IS NULL THEN
+    IF p_profile_id IS NULL AND p_account_id IS NULL THEN
         SET error_code = '58007';
         SET error_message = 'Either profile_id or id must be provided.';
         SIGNAL SQLSTATE '45000' 
@@ -69,22 +68,22 @@ BEGIN
     END IF;
     
     -- Query based on the provided parameters
-    IF p_id IS NOT NULL THEN
+    IF p_account_id IS NOT NULL THEN
         -- Get specific favorite by ID
         SELECT 
             pf.*,
             pp.first_name, 
             pp.last_name,
             pp.gender,
-            pp.date_of_birth,
+            pp.birth_date,
             'success' AS status,
             NULL AS error_type,
             NULL AS error_code,
             NULL AS error_message
         FROM profile_favorites pf
-        LEFT JOIN profile_personal pp ON pf.favorite_profile_id = pp.profile_id
-        WHERE pf.id = p_id
-        AND (pf.isverified != -1 OR pf.isverified IS NULL); -- Exclude soft-deleted records
+        LEFT JOIN profile_personal pp ON pf.account_id = pp.account_id
+        WHERE pf.from_profile_id = p_profile_id
+        AND (pf.is_active = 1 OR pf.is_active IS NULL); -- Only include active records
         
     ELSEIF p_profile_id IS NOT NULL THEN
         -- Get all favorites for a profile
@@ -93,15 +92,15 @@ BEGIN
             pp.first_name, 
             pp.last_name,
             pp.gender,
-            pp.date_of_birth,
+            pp.birth_date,
             'success' AS status,
             NULL AS error_type,
             NULL AS error_code,
             NULL AS error_message
         FROM profile_favorites pf
-        LEFT JOIN profile_personal pp ON pf.favorite_profile_id = pp.profile_id
-        WHERE pf.profile_id = p_profile_id
-        AND (pf.isverified != -1 OR pf.isverified IS NULL) -- Exclude soft-deleted records
+        LEFT JOIN profile_personal pp ON pf.from_profile_id = pp.profile_id
+        WHERE pf.from_profile_id = p_profile_id
+        AND (pf.is_active = 1 OR pf.is_active IS NULL) -- Only include active records
         ORDER BY pf.date_created DESC;
     END IF;
     
@@ -116,14 +115,14 @@ BEGIN
     ) VALUES (
         'READ', 
         CASE 
-            WHEN p_id IS NOT NULL THEN CONCAT('Favorite retrieved by ID: ', p_id)
+            WHEN p_account_id IS NOT NULL THEN CONCAT('Favorite retrieved by ID: ', p_account_id)
             ELSE CONCAT('Favorites retrieved for profile ID: ', p_profile_id)
         END, 
-        p_created_user, 
+        p_account_id, 
         'PROFILE_FAVORITES_GET', 
         CASE 
-            WHEN p_id IS NOT NULL THEN CONCAT('ID: ', p_id)
-            ELSE CONCAT('Profile ID: ', p_profile_id)
+            WHEN p_profile_id IS NOT NULL THEN CONCAT('Profile ID: ', p_profile_id)
+            ELSE CONCAT('Account ID: ', p_account_id)
         END,
         start_time, end_time, execution_time
     );

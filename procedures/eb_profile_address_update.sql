@@ -5,7 +5,7 @@ CREATE PROCEDURE `eb_profile_address_update`(
     IN p_address_line1 VARCHAR(100),
     IN p_address_line2 VARCHAR(100),
     IN p_city VARCHAR(100),
-    IN p_state VARCHAR(100),
+    IN p_state INT,
     IN p_country_id INT,
     IN p_zip VARCHAR(100),
     IN p_landmark1 VARCHAR(100),

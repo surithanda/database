@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS stripe_refunds (
+    id VARCHAR(255) PRIMARY KEY COMMENT 'Stripe refund ID (e.g., re_XXX)',
+    charge_id VARCHAR(255) NOT NULL COMMENT 'Associated Stripe charge ID',
+    amount BIGINT NOT NULL COMMENT 'Amount in smallest currency unit (e.g., cents)',
+    currency VARCHAR(3) NOT NULL COMMENT 'Three-letter ISO currency code',
+    status ENUM('pending', 'succeeded', 'failed', 'canceled') NOT NULL COMMENT 'Refund status',
+    reason ENUM('duplicate', 'fraudulent', 'requested_by_customer', 'expired_uncaptured_charge') COMMENT 'Reason for refund',
+    receipt_number VARCHAR(255) COMMENT 'Receipt number',
+    description TEXT COMMENT 'Description of the refund',
+    failure_reason VARCHAR(100) COMMENT 'Reason for failure if status is failed',
+    failure_balance_transaction VARCHAR(255) COMMENT 'Balance transaction ID for the failure',
+    metadata JSON COMMENT 'Additional refund metadata',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation timestamp',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Record update timestamp',
+    deleted_at TIMESTAMP NULL COMMENT 'Soft delete timestamp',
+    INDEX idx_charge_id (charge_id),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at),
+    CONSTRAINT fk_stripe_refunds_charge FOREIGN KEY (charge_id) REFERENCES stripe_charges(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Stripe refunds data';

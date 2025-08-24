@@ -1,7 +1,7 @@
 DELIMITER //
 CREATE PROCEDURE `eb_profile_family_reference_get`(
     IN p_profile_id INT,
-    IN p_profile_family_reference_id INT,
+    IN p_category VARCHAR(45), -- 'family' or 'reference'
     IN p_created_user VARCHAR(45)
 )
 BEGIN
@@ -60,39 +60,35 @@ BEGIN
     -- Record start time for performance tracking
     SET start_time = NOW();
     
-    -- Validation: Ensure at least one of profile_id or profile_family_reference_id is provided
-    IF p_profile_id IS NULL AND p_profile_family_reference_id IS NULL THEN
+    -- Validation: Ensure profile_id is provided
+    IF p_profile_id IS NULL THEN
         SET error_code = '51008';
-        SET error_message = 'Either profile_id or profile_family_reference_id must be provided.';
+        SET error_message = 'Profile ID must be provided.';
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = error_message;
     END IF;
     
-    -- Query based on the provided parameters
-    IF p_profile_family_reference_id IS NOT NULL THEN
-        -- Get specific family reference record by ID
-        SELECT 
-            pfr.*,
-            'success' AS status,
-            NULL AS error_type,
-            NULL AS error_code,
-            NULL AS error_message
-        FROM profile_family_reference pfr
-        WHERE pfr.profile_family_reference_id = p_profile_family_reference_id
-        AND (pfr.isverified != -1 OR pfr.isverified IS NULL); -- Exclude soft-deleted records
-        
-    ELSEIF p_profile_id IS NOT NULL THEN
-        -- Get all family reference records for a profile
-        SELECT 
-            pfr.*,
-            'success' AS status,
-            NULL AS error_type,
-            NULL AS error_code,
-            NULL AS error_message
-        FROM profile_family_reference pfr
-        WHERE pfr.profile_id = p_profile_id
-        AND (pfr.isverified != -1 OR pfr.isverified IS NULL); -- Exclude soft-deleted records
+    -- Validation: Ensure category is provided and valid
+    IF p_category IS NULL OR (p_category != 'family' AND p_category != 'reference') THEN
+        SET error_code = '51009';
+        SET error_message = 'Category must be either "family" or "reference".';
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = error_message;
     END IF;
+    
+    -- Get all records for a profile matching the specified category (family or reference)
+    SELECT 
+        pfr.*,
+        lt.name AS type_name,
+        lt.description AS type_description,
+        'success' AS status,
+        NULL AS error_type,
+        NULL AS error_code,
+        NULL AS error_message
+    FROM profile_family_reference pfr
+    INNER JOIN lookup_table lt ON pfr.reference_type = lt.id AND lt.category = p_category
+    WHERE pfr.profile_id = p_profile_id
+    AND (pfr.isverified != -1 OR pfr.isverified IS NULL); -- Exclude soft-deleted records
     
     -- Record end time and calculate execution time
     SET end_time = NOW();
@@ -104,16 +100,10 @@ BEGIN
         start_time, end_time, execution_time
     ) VALUES (
         'READ', 
-        CASE 
-            WHEN p_profile_family_reference_id IS NOT NULL THEN CONCAT('Family reference retrieved by ID: ', p_profile_family_reference_id)
-            ELSE CONCAT('Family references retrieved for profile ID: ', p_profile_id)
-        END, 
+        CONCAT(p_category, ' records retrieved for profile ID: ', p_profile_id),
         p_created_user, 
         'PROFILE_FAMILY_REFERENCE_GET', 
-        CASE 
-            WHEN p_profile_family_reference_id IS NOT NULL THEN CONCAT('Reference ID: ', p_profile_family_reference_id)
-            ELSE CONCAT('Profile ID: ', p_profile_id)
-        END,
+        CONCAT('Profile ID: ', p_profile_id, ', Category: ', p_category),
         start_time, end_time, execution_time
     );
     

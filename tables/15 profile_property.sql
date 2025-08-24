@@ -11,6 +11,6 @@ CREATE TABLE `profile_property` (
   `modified_date` datetime DEFAULT NULL,
   `created_by` varchar(45) DEFAULT NULL,
   `modifyed_by` varchar(45) DEFAULT NULL,
-  `isverified` bit DEFAULT 0,
+  `isverified` int DEFAULT 0,
   PRIMARY KEY (`property_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci COMMENT='	';

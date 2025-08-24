@@ -32,6 +32,9 @@ BEGIN
     DECLARE sno VARCHAR(25) DEFAULT '';
     DECLARE account_code VARCHAR(50);
 	DECLARE min_birth_date DATE;
+    DECLARE start_time DATETIME;
+    DECLARE end_time DATETIME;
+    DECLARE execution_time INT;
 	
   -- Declare handler for SQL exceptions 
     DECLARE EXIT HANDLER FOR SQLEXCEPTION 
@@ -40,6 +43,16 @@ BEGIN
 		GET DIAGNOSTICS CONDITION 1
 			error_message = MESSAGE_TEXT,
 			error_code = MYSQL_ERRNO;
+		
+		-- Log error using common_log_error procedure
+		CALL common_log_error(
+			error_code,
+			error_message,
+			p_email,
+			'ACCOUNT_LOGIN_CREATE',
+			start_time
+		);
+		
 		SELECT 
 			'fail' AS status,
 			'SQL Exception' as error_type,
@@ -54,6 +67,16 @@ BEGIN
     DECLARE EXIT HANDLER FOR SQLSTATE '45000'
     BEGIN
         ROLLBACK;
+        
+        -- Log error using common_log_error procedure
+        CALL common_log_error(
+            error_code,
+            error_message,
+            p_email,
+            'ACCOUNT_LOGIN_CREATE',
+            start_time
+        );
+        
         -- Return error information
 		SELECT 
             'fail' AS status,
@@ -64,6 +87,9 @@ BEGIN
             error_code,
             error_message;	
     END;
+    
+    -- Record start time for performance tracking
+    SET start_time = NOW();
     
     -- Start transaction at the beginning
     START TRANSACTION;
@@ -215,6 +241,21 @@ BEGIN
     
     -- If we got here, everything succeeded, so commit
     COMMIT;
+    
+    -- Record end time and calculate execution time
+    SET end_time = NOW();
+    SET execution_time = TIMESTAMPDIFF(MICROSECOND, start_time, end_time) / 1000; -- Convert to milliseconds
+    
+    -- Log the successful creation
+    CALL common_log_activity(
+        'CREATE', 
+        CONCAT('Account created: ', p_email), 
+        p_email, 
+        'ACCOUNT_LOGIN_CREATE', 
+        CONCAT('Account ID: ', new_account_id, ', Account Code: ', account_code),
+        start_time,
+        end_time
+    );
     
     -- Return success results
 	SELECT 
